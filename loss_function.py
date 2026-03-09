@@ -14,7 +14,7 @@ def ELBO_loss(x_hat, x_real, mu, log_var):
     # KL divergence
     kl_loss = -0.5 * torch.sum(1 + log_var - mu.pow(2) - log_var.exp())
     
-    return recon_loss + kl_loss
+    return recon_loss , kl_loss
 
 def identity_loss(x_real, x_hat, identity_net):
     """
