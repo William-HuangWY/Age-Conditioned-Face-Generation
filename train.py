@@ -1,5 +1,7 @@
+import torch
 import torch.optim as optim
 import loss_function 
+from cvae_model import ConditionalVariationAutoEncoder
 device = "cuda" if torch.cuda.is_available() else "cpu"
 
 image_size = 128
@@ -34,6 +36,6 @@ for epoch in range(num_epochs):
           f"Recon: {total_recon/len(dataset):.4f} | "
           f"KL: {total_kl/len(dataset):.4f}")
     
-    # 每幾個 epoch 儲存模型
+    # every 10 epochs, save model checkpoint
     if (epoch + 1) % 10 == 0:
         torch.save(model.state_dict(), f"cvae_epoch{epoch+1}.pth")
