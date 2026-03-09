@@ -4,7 +4,7 @@ Deep learning project for age-conditioned human face generation.
 
 ## Overview
 
-This project explores conditional generative models for controllable face aging and rejuvenation.  
+This project explores conditional generative models for controllable face aging.
 Given a face image and a target age condition, the model generates a realistic face that reflects the specified age.
 
 We investigate conditional generative approaches such as:
