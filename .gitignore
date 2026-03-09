@@ -8,9 +8,11 @@ Desktop.ini
 
 # VSCode
 .vscode/
+__pycache__/
 
 data/
 datasets/
+temp_save_imgs/
 *.zip
 *.tar
 *.gz

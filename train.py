@@ -1,7 +1,9 @@
 import os, torch
 import torch.optim as optim
 from torch.utils.data import DataLoader
+import torchvision.utils as vutils
 
+import matplotlib.pyplot as plt
 from cvae_model import ConditionalVariationAutoEncoder
 from face_age_dataset import FaceAgeDataset
 from loss_function import ELBO_loss, identity_loss, age_loss
@@ -29,12 +31,12 @@ if __name__ == "__main__":
     identity_net = None
     age_net = None
     
-    num_epochs = 50
+    num_epochs = 50 # 10
     for epoch in range(num_epochs):
         model.train()
         total_loss = 0
         
-        for imgs, conds, _ in dataloader:
+        for batch_idx, (imgs, conds, _) in enumerate(dataloader):
             imgs = imgs.to(device)
             conds = conds.to(device)
             
