@@ -12,10 +12,16 @@ __pycache__/
 
 data/
 datasets/
+pytorch-DEX/
+pytorch_DEX/
 temp_save_imgs/
+
 *.zip
 *.tar
 *.gz
+
+# Temporary files
+TEMP.py
 
 # ENV VARIABLES
 .env

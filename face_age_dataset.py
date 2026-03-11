@@ -4,6 +4,16 @@ import torch
 from torch.utils.data import Dataset
 from torchvision import transforms
 
+AGE_BUCKETS = [
+    (12,18),
+    (19,25),
+    (26,31),
+    (32,39),
+    (40,53),
+    (54,67),
+    (68,80),
+]
+
 class FaceAgeDataset(Dataset):
     """
     Dataset for age-conditioned face generation.
@@ -54,23 +64,10 @@ class FaceAgeDataset(Dataset):
         return len(self.samples)
 
     def age_to_bucket(self, age) -> int:
-        """
-        Convert age to bucket index (0..condition_dim-1)
-        Adjust ranges according to condition_dim
-        """
-        if self.condition_dim == 7:  # 7 buckets
-            if 12 <= age <= 18: return 0
-            elif 19 <= age <= 25: return 1
-            elif 26 <= age <= 31: return 2
-            elif 32 <= age <= 39: return 3
-            elif 40 <= age <= 53: return 4
-            elif 54 <= age <= 67: return 5
-            elif 68 <= age <= 80: return 6
-            else: raise ValueError(f"Age {age} out of range")
-        else:
-            # default: scale to condition_dim evenly
-            bucket = min(age // (100 // self.condition_dim), self.condition_dim - 1)
-            return bucket
+        for i, (low, high) in enumerate(AGE_BUCKETS):
+            if low <= age <= high:
+                return i
+        raise ValueError(f"Age {age} out of range")
 
     def bucket_to_onehot(self, bucket_idx):
         condition = torch.zeros(self.condition_dim, dtype=torch.float32)
