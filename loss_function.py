@@ -1,11 +1,7 @@
 import torch
 import torch.nn.functional as F
 from face_age_dataset import AGE_BUCKETS
-from insightface.app import FaceAnalysis
-#pip install insightface
 
-# pip install insightface
-from insightface.app import FaceAnalysis
 
 #x = original, x_hat = prediction
 def ELBO_loss(x_hat, x_real, mu, log_var):
@@ -21,25 +17,6 @@ def ELBO_loss(x_hat, x_real, mu, log_var):
     kl_loss = -0.5 * torch.mean(1 + log_var - mu.pow(2) - log_var.exp())
     
     return recon_loss , kl_loss
-
-# def identity_loss(x_real, x_hat, identity_net):
-#     """
-#     x_real, x_hat: (B, C, H, W), normalized as required by identity_net
-#     identity_net: pre-trained network, output normalized embeddings
-#     """
-
-#     app = FaceAnalysis(name="buffalo_l")  
-#     app.prepare(ctx_id=0)  # GPU = 0, CPU = -1
-#     with torch.no_grad():  # pre-trained net
-#         feat_real = identity_net(x_real)  # (B, embedding_dim)
-#     feat_fake = identity_net(x_hat)      # (B, embedding_dim)
-    
-#     # cosine similarity
-#     feat_real = F.normalize(feat_real, p=2, dim=1)
-#     feat_fake = F.normalize(feat_fake, p=2, dim=1)
-    
-#     loss = 1 - (feat_real * feat_fake).sum(dim=1).mean()  # 1 - cosine similarity
-#     return loss
 
 def identity_loss(x_real, x_hat, identity_net):
 
