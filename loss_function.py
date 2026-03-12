@@ -1,6 +1,8 @@
 import torch
 import torch.nn.functional as F
 from face_age_dataset import AGE_BUCKETS
+from insightface.app import FaceAnalysis
+#pip install insightface
 
 # pip install insightface
 from insightface.app import FaceAnalysis
