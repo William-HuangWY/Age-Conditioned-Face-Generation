@@ -7,11 +7,11 @@ from face_age_dataset import FaceAgeDataset
 
 device = "cuda" if torch.cuda.is_available() else "cpu"
 # dataset = FaceAgeDataset(target_size=256, padding=True) # dataset_256_padding
-# dataset = FaceAgeDataset(target_size=256, padding=False) # dataset_256_resize
-dataset = FaceAgeDataset(target_size=128, padding=False) # dataset_128_resize
-model = ConditionalVariationAutoEncoder(dataset.target_size, latent_dim=256, condition_dim=dataset.condition_dim).to(device)
+dataset = FaceAgeDataset(target_size=256, padding=False) # dataset_256_resize
+# dataset = FaceAgeDataset(target_size=128, padding=False) # dataset_128_resize
+model = ConditionalVariationAutoEncoder(dataset.target_size, latent_dim=512, condition_dim=dataset.condition_dim).to(device)
 
-model.load_state_dict(torch.load("saved_models/cvae_epoch_100.pth", map_location=device))
+model.load_state_dict(torch.load("saved_models/cvae_epoch_10.pth", map_location=device))
 model.eval()
 
 # sample young images from the dataset
@@ -27,7 +27,7 @@ for i in indices:
 imgs = torch.stack([s[0] for s in samples]).to(device)
 src_buckets = torch.tensor([s[1] for s in samples])
 print("Source buckets:", src_buckets.tolist())
-target_buckets = torch.clamp(src_buckets + 3, max=dataset.condition_dim - 1)
+target_buckets = torch.full_like(src_buckets, 6) # torch.clamp(src_buckets + 3, max=dataset.condition_dim - 1)
 print("Target buckets:", target_buckets.tolist())
 
 conds = torch.zeros(num_sample, dataset.condition_dim)
@@ -41,7 +41,7 @@ imgs = imgs.cpu()
 recons = x_hat.cpu()
 grid = vutils.make_grid(torch.cat([imgs, recons], dim=0), nrow=num_sample)
 plt.figure(figsize=(10,4))
-plt.title("Top: Original | Bottom: Age +3 Bucket")
+plt.title("Top: Original | Bottom: Index 6 Bucket")
 plt.imshow(grid.permute(1,2,0).clamp(0,1))
 plt.axis("off")
 plt.show()

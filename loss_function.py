@@ -2,6 +2,9 @@ import torch
 import torch.nn.functional as F
 from face_age_dataset import AGE_BUCKETS
 
+# pip install insightface
+from insightface.app import FaceAnalysis
+
 #x = original, x_hat = prediction
 def ELBO_loss(x_hat, x_real, mu, log_var):
     """
@@ -17,20 +20,45 @@ def ELBO_loss(x_hat, x_real, mu, log_var):
     
     return recon_loss , kl_loss
 
+# def identity_loss(x_real, x_hat, identity_net):
+#     """
+#     x_real, x_hat: (B, C, H, W), normalized as required by identity_net
+#     identity_net: pre-trained network, output normalized embeddings
+#     """
+
+#     app = FaceAnalysis(name="buffalo_l")  
+#     app.prepare(ctx_id=0)  # GPU = 0, CPU = -1
+#     with torch.no_grad():  # pre-trained net
+#         feat_real = identity_net(x_real)  # (B, embedding_dim)
+#     feat_fake = identity_net(x_hat)      # (B, embedding_dim)
+    
+#     # cosine similarity
+#     feat_real = F.normalize(feat_real, p=2, dim=1)
+#     feat_fake = F.normalize(feat_fake, p=2, dim=1)
+    
+#     loss = 1 - (feat_real * feat_fake).sum(dim=1).mean()  # 1 - cosine similarity
+#     return loss
+
 def identity_loss(x_real, x_hat, identity_net):
-    """
-    x_real, x_hat: (B, C, H, W), normalized as required by identity_net
-    identity_net: pre-trained network, output normalized embeddings
-    """
-    with torch.no_grad():  # pre-trained net
-        feat_real = identity_net(x_real)  # (B, embedding_dim)
-    feat_fake = identity_net(x_hat)      # (B, embedding_dim)
-    
-    # cosine similarity
-    feat_real = F.normalize(feat_real, p=2, dim=1)
-    feat_fake = F.normalize(feat_fake, p=2, dim=1)
-    
-    loss = 1 - (feat_real * feat_fake).sum(dim=1).mean()  # 1 - cosine similarity
+
+    # resize to arcface input
+    x_real = F.interpolate(x_real, size=112, mode='bilinear', align_corners=False)
+    x_hat = F.interpolate(x_hat, size=112, mode='bilinear', align_corners=False)
+
+    # normalize to [-1,1]
+    x_real = (x_real - 0.5) / 0.5
+    x_hat = (x_hat - 0.5) / 0.5
+
+    with torch.no_grad():
+        feat_real = identity_net(x_real)
+
+    feat_fake = identity_net(x_hat)
+
+    feat_real = F.normalize(feat_real, dim=1)
+    feat_fake = F.normalize(feat_fake, dim=1)
+
+    loss = 1 - (feat_real * feat_fake).sum(dim=1).mean()
+
     return loss
 
 def age_loss(x_hat, age_label, age_net):

@@ -26,13 +26,14 @@ class ConditionalVariationAutoEncoder(nn.Module):
         
         # Encoder
         self.encoder_conv = nn.Sequential(
-            nn.Conv2d(3, 32, kernel_size=4, stride=2, padding=1), # (B, 32, img_size/2, img_size/2)
+            nn.Conv2d(3, 64, kernel_size=4, stride=2, padding=1), # (B, 64, img_size/2, img_size/2)
             nn.ReLU(),
-            nn.Conv2d(32, 64, kernel_size=4, stride=2, padding=1), # (B, 64, img_size/4, img_size/4)
+            nn.Conv2d(64, 128, kernel_size=4, stride=2, padding=1), # (B, 128, img_size/4, img_size/4)
             nn.ReLU(),
-            nn.Conv2d(64, 128, kernel_size=4, stride=2, padding=1), # (B, 128, img_size/8, img_size/8)
+            nn.Conv2d(128, 256, kernel_size=4, stride=2, padding=1), # (B, 256, img_size/8, img_size/8)
             nn.ReLU(),
-            nn.Conv2d(128, 256, kernel_size=4, stride=2, padding=1), # (B, 256, img_size/16, img_size/16)
+            nn.Conv2d(256, 512, kernel_size=4, stride=2, padding=1), # (B, 512, img_size/16, img_size/16)
+            nn.BatchNorm2d(512),
             nn.ReLU(),
         )
         
@@ -51,21 +52,31 @@ class ConditionalVariationAutoEncoder(nn.Module):
         # Decoder
         self.decoder_fc = nn.Linear(latent_dim + self.condition_dim, self.flatten_dim)
         self.decoder_conv = nn.Sequential(
-            nn.ConvTranspose2d(256, 128, kernel_size=4, stride=2, padding=1), # (B, 128, img_size/8, img_size/8)
+            nn.Upsample(scale_factor=2, mode='bilinear', align_corners=False), # (B, 512, img_size/8, img_size/8)
+            nn.Conv2d(512, 256, kernel_size=3, stride=1, padding=1), # (B, 256, img_size/8, img_size/8)
+            nn.BatchNorm2d(256), # stabilize training
+            nn.ReLU(),
+            nn.Upsample(scale_factor=2, mode='bilinear', align_corners=False), # (B, 256, img_size/4, img_size/4)
+            nn.Conv2d(256, 128, kernel_size=3, stride=1, padding=1), # (B, 128, img_size/4, img_size/4)
             nn.BatchNorm2d(128), # stabilize training
             nn.ReLU(),
-            nn.ConvTranspose2d(128, 64, kernel_size=4, stride=2, padding=1), # (B, 64, img_size/4, img_size/4)
+            nn.Upsample(scale_factor=2, mode='bilinear', align_corners=False), # (B, 128, img_size/2, img_size/2)
+            nn.Conv2d(128, 64, kernel_size=3, stride=1, padding=1), # (B, 64, img_size/2, img_size/2)
             nn.BatchNorm2d(64), # stabilize training
             nn.ReLU(),
-            nn.ConvTranspose2d(64, 32, kernel_size=4, stride=2, padding=1), # (B, 32, img_size/2, img_size/2)
+            nn.Upsample(scale_factor=2, mode='bilinear', align_corners=False), # (B, 64, img_size, img_size)
+            nn.Conv2d(64, 32, kernel_size=3, stride=1, padding=1), # (B, 32, img_size, img_size)
             nn.BatchNorm2d(32), # stabilize training
             nn.ReLU(),
-            nn.ConvTranspose2d(32, 3, kernel_size=4, stride=2, padding=1), # (B, 3, img_size, img_size)
+            nn.Conv2d(32, 16, 3, 1, 1), # (B, 16, img_size, img_size)
+            nn.ReLU(),
+            nn.Conv2d(16, 3, kernel_size=3, stride=1, padding=1), # (B, 3, img_size, img_size)
             nn.Sigmoid() # normalized between 0 and 1
         )
 
     def reparameterize(self, mu, log_var):
         '''Reparameterization trick to sample from N(mu, var) from N(0,1).'''
+        log_var = torch.clamp(log_var, -10, 10) # prevent overflow
         std = torch.exp(0.5 * log_var) # (B, latent_dim)
         eps = torch.randn_like(std) # (B, latent_dim)
         return mu + eps * std

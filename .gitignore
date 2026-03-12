@@ -14,6 +14,7 @@ data/
 datasets/
 pytorch-DEX/
 pytorch_DEX/
+saved_models/local_save/
 temp_save_imgs/
 
 *.zip
