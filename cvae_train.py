@@ -8,8 +8,9 @@ from cvae_model import ConditionalVariationAutoEncoder
 from face_age_dataset import FaceAgeDataset
 from loss_function import ELBO_loss, identity_loss, age_loss
 
-# pip install insightface
-from insightface.model_zoo import get_model
+from facenet_pytorch import InceptionResnetV1
+#git clone https://github.com/timesler/facenet-pytorch.git facenet_pytorch
+
 
 # git clone https://github.com/siriusdemon/pytorch-DEX.git
 # cd pytorch-DEX
@@ -39,10 +40,7 @@ if __name__ == "__main__":
     weights = { 'beta': 0.1, 'identity': 1.0, 'age': 0.001 }
     
     # identity network
-    identity_net = get_model('arcface_r100_v1')
-    identity_net = identity_net.to(device)
-    identity_net.eval()
-    for p in identity_net.parameters(): p.requires_grad = False
+    identity_net = InceptionResnetV1(pretrained='vggface2').eval()
     
     # age estimator
     age_net = Age().to(device)

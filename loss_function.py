@@ -19,25 +19,27 @@ def ELBO_loss(x_hat, x_real, mu, log_var):
     return recon_loss , kl_loss
 
 def identity_loss(x_real, x_hat, identity_net):
+    """
+    x_real, x_hat: [B, C, H, W], float tensor, range [0,1] 或 [-1,1]
+    identity_net: InceptionResnetV1
+    """
+    x_real = F.interpolate(x_real, size=(112, 112), mode='bilinear', align_corners=False)
+    x_hat  = F.interpolate(x_hat,  size=(112, 112), mode='bilinear', align_corners=False)
 
-    # resize to arcface input
-    x_real = F.interpolate(x_real, size=112, mode='bilinear', align_corners=False)
-    x_hat = F.interpolate(x_hat, size=112, mode='bilinear', align_corners=False)
-
-    # normalize to [-1,1]
     x_real = (x_real - 0.5) / 0.5
-    x_hat = (x_hat - 0.5) / 0.5
+    x_hat  = (x_hat  - 0.5) / 0.5
 
     with torch.no_grad():
         feat_real = identity_net(x_real)
-
     feat_fake = identity_net(x_hat)
 
     feat_real = F.normalize(feat_real, dim=1)
     feat_fake = F.normalize(feat_fake, dim=1)
 
-    loss = 1 - (feat_real * feat_fake).sum(dim=1).mean()
+    cos_sim = (feat_real * feat_fake).sum(dim=1)
+    cos_sim = torch.clamp(cos_sim, -1.0, 1.0)
 
+    loss = 1 - cos_sim.mean()
     return loss
 
 def age_loss(x_hat, age_label, age_net):
